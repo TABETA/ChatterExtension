@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "Chatter repost kidnapper",
+    "version": "1.0",
+    "description": "Chatterで共有された投稿を非表示にします",
+    "permissions": [
+        "activeTab",
+        "scripting"
+    ],
+    "host_permissions": ["https://*.salesforce.com/*/chatter/*"],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["https://*.salesforce.com/*/chatter/*"],
+            "js": ["script.js"]
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
