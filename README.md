@@ -13,27 +13,27 @@ https://*.salesforce.com/*/chatter/*
 1. Chromeで`chrome://extensions/`を開きます
 2. 画面右上のデベロッパーモードを有効にします
 
-    ![Alt text](image.png)
+    ![Alt text](imgs/image.png)
 
 1. `パッケージ化されていない拡張機能を読み込む`をクリックします
 
-    ![Alt text](image-1.png)
+    ![Alt text](imgs/image-1.png)
 
 2. ChatterRepostKidnapperフォルダを選択します
 3. 下図のようになれば導入完了です。
 
-    ![Alt text](image-3.png)
+    ![Alt text](imgs/image-3.png)
 
 ## 使い方
 
 拡張機能アイコンから`Chatter repost kidnapper`にアクセスしてください。
 
-![Alt text](image-2.png)
+![Alt text](imgs/image-2.png)
 
 `hide`ボタンを押すとRepostを非表示にします。
 
-![Alt text](image-4.png)
+![Alt text](imgs/image-4.png)
 
 既に非表示の状態の場合は再表示のために`show`ボタンに切り替わります。
 
-![Alt text](image-5.png)
+![Alt text](imgs/image-5.png)
