@@ -1,14 +1,20 @@
-let isEnabled = false;
-
+let isVisible = false;
+chrome.storage.local.get('isVisible', function(data) {
+    isVisible = data.isVisible;
+    if (typeof isVisible === 'undefined') {
+        isVisible = false;
+    }
+});
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.query === 'getStatus') {
-        sendResponse({isEnabled: isEnabled});
+        sendResponse({isVisible: isVisible});
     } else if (request.toggle) {
-        isEnabled = !isEnabled;
-        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {isEnabled: isEnabled});
+        isVisible = !isVisible;
+        chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {isVisible: isVisible});
         });
-        sendResponse({isEnabled: isEnabled});
+        chrome.storage.local.set({isVisible: isVisible}, () => { });
+        sendResponse({isVisible: isVisible});
     }
     return true;
 });

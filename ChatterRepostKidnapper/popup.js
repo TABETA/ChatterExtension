@@ -3,14 +3,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     chrome.runtime.sendMessage({query: 'getStatus'}, function(response) {
         if (response) {
-            button.textContent = response.isEnabled ? 'show' : 'hide';
+            button.textContent = response.isVisible ? 'hide' : 'show';
         }
     });
 
     button.addEventListener('click', () => {
         chrome.runtime.sendMessage({toggle: true}, function(response) {
             if (response) {
-                button.textContent = response.isEnabled ? 'show' : 'hide';
+                button.textContent = response.isVisible ? 'hide' : 'show';
             }
         });
     });

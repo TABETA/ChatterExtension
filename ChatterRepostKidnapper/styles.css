@@ -1,0 +1,6 @@
+div[data-chatterextension-read] a.set-read {
+    display: none;
+}
+div[data-chatterextension-unread] a.set-unread {
+    display: none;
+}

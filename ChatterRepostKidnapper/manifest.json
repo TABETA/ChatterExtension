@@ -5,7 +5,8 @@
     "description": "Chatterで共有された投稿を非表示にします",
     "permissions": [
         "activeTab",
-        "scripting"
+        "scripting",
+        "storage"
     ],
     "host_permissions": ["https://*.salesforce.com/*/chatter/*"],
     "background": {
@@ -14,7 +15,8 @@
     "content_scripts": [
         {
             "matches": ["https://*.salesforce.com/*/chatter/*"],
-            "js": ["script.js"]
+            "js": ["script.js"],
+            "css":["styles.css"]
         }
     ],
     "action": {
