@@ -1,22 +1,14 @@
 let g_isVisible = false;
 let g_read = false;
 
-const setRepostVisibility = (doc, isVisible, read) => {
-    const getReposts = (feedItems) => {
-        const reposts = Array.from(feedItems).map(div => {
-            const doesContainRepost = Array.from(div.querySelectorAll('a')).some(anchor => anchor.innerText.includes('元の投稿'));
-            const doesContainComments = div.querySelector('div.feeditemcomment.cxfeedcomment') !== null;
-            return (doesContainRepost && !doesContainComments) ? div : null;
-        }).filter(div => div !== null);
-        return reposts;
-    };
-    const hideDivs = (reposts) => {
-        reposts.forEach(div => { if(div) { div.style.display = 'none'; } });
-    };
-    const showDivs = (reposts) => {
-        reposts.forEach(div => { if(div) { div.style.display = ''; } });
-    };
+const hideDivs = (reposts) => {
+    reposts.forEach(div => { if(div) { div.style.display = 'none'; } });
+};
+const showDivs = (reposts) => {
+    reposts.forEach(div => { if(div) { div.style.display = ''; } });
+};
 
+const setReadItemVisibility = (doc, isVisible, read) => {
     const addExtButton = (doc, read) =>{
         const attrProcessed = 'data-chatterextension-processed';
         const attrRead = 'data-chatterextension-read';
@@ -42,7 +34,6 @@ const setRepostVisibility = (doc, isVisible, read) => {
                         chrome.storage.local.set({read:read});
                         div.setAttribute(attrRead, '');
                         div.removeAttribute(attrUnread);
-                        console.log(read);
                     }
                 }
             },
@@ -55,7 +46,6 @@ const setRepostVisibility = (doc, isVisible, read) => {
                     chrome.storage.local.set({read:read});
                     div.setAttribute(attrUnread, '');
                     div.removeAttribute(attrRead);
-                    console.log(read);
 
                 }
             }].forEach((obj)=>{
@@ -70,26 +60,44 @@ const setRepostVisibility = (doc, isVisible, read) => {
         });
     };
     
-    const feedItems = doc.querySelectorAll('div.cxfeeditem.feeditem');
-    const reposts = getReposts(feedItems);
+    addExtButton(doc, read);
+    const getReadItems = (doc, read) => {
+        if(Object.keys(read).length === 0){
+            return undefined;
+        }
+        const readIDs = Object.keys(read);
+        const query = readIDs.map(v => `[id="${v}"]`).join(',');
+        return doc.querySelectorAll(query);
+    }
+    const readItems = getReadItems(doc, read);
+
+    if(readItems){
+        if(isVisible){
+            showDivs(readItems);
+        } else {
+            hideDivs(readItems);
+        }    
+    }
+
+};
+
+const setRepostVisibility = (doc, isVisible) => {
+    const getReposts = (doc) => {
+        const feedItems = doc.querySelectorAll('div.cxfeeditem.feeditem');
+        const reposts = Array.from(feedItems).map(div => {
+            const doesContainRepost = Array.from(div.querySelectorAll('a')).some(anchor => anchor.innerText.includes('元の投稿'));
+            const doesContainComments = div.querySelector('div.feeditemcomment.cxfeedcomment') !== null;
+            return (doesContainRepost && !doesContainComments) ? div : null;
+        }).filter(div => div !== null);
+        return reposts;
+
+    };
+    const reposts = getReposts(doc);
     if(isVisible){
         showDivs(reposts);
     } else {
         hideDivs(reposts);
     }
-    addExtButton(doc, read);
-    chrome.storage.local.get("read", function({read}){
-        if(Object.keys(read).length > 0){
-            const query = Object.keys(read).map(v => `[id="${v}"]`).join(',');
-            const readItems = document.querySelectorAll(query);
-            if(isVisible){
-                showDivs(readItems);
-            } else {
-                hideDivs(readItems);
-            }
-        }
-    });
-    
 };
 function getStorageItem(key) {
     return new Promise((resolve, reject) => {
@@ -104,7 +112,8 @@ function getStorageItem(key) {
 }
 Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values => {
     [g_isVisible, g_read] = values;
-    setRepostVisibility(document, g_isVisible, g_read);
+    setRepostVisibility(document, g_isVisible);
+    setReadItemVisibility(document, g_isVisible, g_read);
 }).catch(error => {
     console.error("An error occurred:", error);
 });
@@ -113,8 +122,10 @@ Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values =
 const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         for(let node of mutation.addedNodes){
-            if(node.nodeType === Node.ELEMENT_NODE){
-                setRepostVisibility(node, g_isVisible, g_read);
+            if(node.nodeName === 'DIV'){
+                let doc = node.parentElement;
+                setRepostVisibility(doc, g_isVisible);
+                setReadItemVisibility(doc, g_isVisible, g_read);
             }
         }
     });
