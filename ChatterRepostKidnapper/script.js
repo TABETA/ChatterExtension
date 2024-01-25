@@ -136,6 +136,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.hasOwnProperty('isVisible')) {
         g_isVisible = request.isVisible;
-        setRepostVisibility(document, g_isVisible, g_read);
+        setRepostVisibility(document, g_isVisible);
+        setReadItemVisibility(document, g_isVisible, g_read);
     }
 });
