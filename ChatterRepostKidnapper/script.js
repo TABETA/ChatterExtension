@@ -19,7 +19,7 @@ const setReadItemVisibility = (doc, isVisible, read) => {
         feedItems.forEach(elem => {
             const id = elem.id;
             elem.setAttribute(attrProcessed, '');
-            if(elem.id in read){
+            if(id in read){
                 elem.setAttribute(attrRead, '');
                 elem.removeAttribute(attrUnread);
             } else {
