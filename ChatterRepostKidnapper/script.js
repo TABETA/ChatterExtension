@@ -1,11 +1,13 @@
 let g_isVisible = false;
 let g_read = false;
 
-const hideDivs = (reposts) => {
-    reposts.forEach(div => { if(div) { div.style.display = 'none'; } });
+const hideElement = (elem) => {if(elem) { elem.style.display = 'none'; }};
+const hideElements = (elems) => {
+    elems.forEach(elem => { hideElement(elem); });
 };
-const showDivs = (reposts) => {
-    reposts.forEach(div => { if(div) { div.style.display = ''; } });
+const showElement = (elem) => {if(elem) { elem.style.display = ''; }};
+const showElements = (elems) => {
+    elems.forEach(elem => { showElement(elem); });
 };
 
 const setReadItemVisibility = (doc, isVisible, read) => {
@@ -14,27 +16,29 @@ const setReadItemVisibility = (doc, isVisible, read) => {
         const attrRead = 'data-chatterextension-read';
         const attrUnread = 'data-chatterextension-unread';
         const feedItems = doc.querySelectorAll(`div.cxfeeditem.feeditem:not([${attrProcessed}])`);
-        feedItems.forEach(div => {
-            const id = div.id;
-            div.setAttribute(attrProcessed, '');
-            if(div.id in read){
-                div.setAttribute(attrRead, '');
-                div.removeAttribute(attrUnread);
+        feedItems.forEach(elem => {
+            const id = elem.id;
+            elem.setAttribute(attrProcessed, '');
+            if(elem.id in read){
+                elem.setAttribute(attrRead, '');
+                elem.removeAttribute(attrUnread);
             } else {
-                div.setAttribute(attrUnread, '');
-                div.removeAttribute(attrRead);
+                elem.setAttribute(attrUnread, '');
+                elem.removeAttribute(attrRead);
             }
             [{
                 class: 'set-read',
                 text: '既読にする',
                 action : (e) => {
                     e.stopPropagation();
-                    if(!(id in read)){
-                        read[id] = true;
-                        chrome.storage.local.set({read:read});
-                        div.setAttribute(attrRead, '');
-                        div.removeAttribute(attrUnread);
+                    if(id in read){
+                        return;
                     }
+                    read[id] = true;
+                    chrome.storage.local.set({read:read});
+                    elem.setAttribute(attrRead, '');
+                    elem.removeAttribute(attrUnread);
+                    hideElement(elem);
                 }
             },
             {
@@ -42,11 +46,14 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                 text: '未読にする',
                 action : (e) => {
                     e.stopPropagation();
+                    if(!(id in read)){
+                        return;
+                    }
                     delete read[id];
                     chrome.storage.local.set({read:read});
-                    div.setAttribute(attrUnread, '');
-                    div.removeAttribute(attrRead);
-
+                    elem.setAttribute(attrUnread, '');
+                    elem.removeAttribute(attrRead);
+                    showElement(elem);
                 }
             }].forEach((obj)=>{
                 let a = document.createElement('a');
@@ -67,18 +74,15 @@ const setReadItemVisibility = (doc, isVisible, read) => {
         }
         const readIDs = Object.keys(read);
         const query = readIDs.map(v => `[id="${v}"]`).join(',');
-        return doc.querySelectorAll(query);
+        return Array.from(doc.querySelectorAll(query));
     }
     const readItems = getReadItems(doc, read);
 
-    if(readItems){
-        if(isVisible){
-            showDivs(readItems);
-        } else {
-            hideDivs(readItems);
-        }    
-    }
-
+    if(isVisible){
+        showElements(readItems);
+    } else {
+        hideElements(readItems);
+    }    
 };
 
 const setRepostVisibility = (doc, isVisible) => {
@@ -94,9 +98,9 @@ const setRepostVisibility = (doc, isVisible) => {
     };
     const reposts = getReposts(doc);
     if(isVisible){
-        showDivs(reposts);
+        showElements(reposts);
     } else {
-        hideDivs(reposts);
+        hideElements(reposts);
     }
 };
 function getStorageItem(key) {
