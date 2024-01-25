@@ -61,7 +61,7 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                 a.textContent = obj.text;
                 a.href = 'javascript:void(0);';
                 a.style = {"margin-right": "10px"};
-                div.appendChild(a);
+                elem.appendChild(a);
                 a.addEventListener('click', obj.action);
             });
         });
@@ -69,12 +69,9 @@ const setReadItemVisibility = (doc, isVisible, read) => {
     
     addExtButton(doc, read);
     const getReadItems = (doc, read) => {
-        if(Object.keys(read).length === 0){
-            return undefined;
-        }
-        const readIDs = Object.keys(read);
+        const readIDs = read && Object.keys(read) || [];
         const query = readIDs.map(v => `[id="${v}"]`).join(',');
-        return Array.from(doc.querySelectorAll(query));
+        return doc.querySelectorAll(query);
     }
     const readItems = getReadItems(doc, read);
 
@@ -88,11 +85,14 @@ const setReadItemVisibility = (doc, isVisible, read) => {
 const setRepostVisibility = (doc, isVisible) => {
     const getReposts = (doc) => {
         const feedItems = doc.querySelectorAll('div.cxfeeditem.feeditem');
-        const reposts = Array.from(feedItems).map(div => {
-            const doesContainRepost = Array.from(div.querySelectorAll('a')).some(anchor => anchor.innerText.includes('元の投稿'));
-            const doesContainComments = div.querySelector('div.feeditemcomment.cxfeedcomment') !== null;
-            return (doesContainRepost && !doesContainComments) ? div : null;
-        }).filter(div => div !== null);
+        const reposts = Array.from(feedItems)
+            .filter(item => !item.closest('.rechatMainContainer'))
+            .map(div => {
+                const doesContainRepost = Array.from(div.querySelectorAll('a')).some(anchor => anchor.innerText === '元の投稿');
+                const doesContainComments = div.querySelector('div.feeditemcomment.cxfeedcomment') !== null;
+                return (doesContainRepost && !doesContainComments) ? div : null;
+            })
+            .filter(div => div !== null);
         return reposts;
 
     };
