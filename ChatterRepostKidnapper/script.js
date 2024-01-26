@@ -9,7 +9,6 @@ const showElement = (elem) => {if(elem) { elem.style.display = ''; }};
 const showElements = (elems) => {
     elems.forEach(elem => { showElement(elem); });
 };
-
 const setReadItemVisibility = (doc, isVisible, read) => {
     const addExtButton = (doc, read) =>{
         const attrProcessed = 'data-chatterextension-processed';
@@ -26,6 +25,9 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                 elem.setAttribute(attrUnread, '');
                 elem.removeAttribute(attrRead);
             }
+            let container = document.createElement('div');
+            container.classList.add("chatterextension-container");
+            elem.appendChild(container);
             [{
                 class: 'set-read',
                 text: '既読にする',
@@ -38,7 +40,7 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                     chrome.storage.local.set({read:read});
                     elem.setAttribute(attrRead, '');
                     elem.removeAttribute(attrUnread);
-                    hideElement(elem);
+                    hideElement(elem);//TODO: showモードでも隠れるからダメ
                 }
             },
             {
@@ -61,9 +63,21 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                 a.textContent = obj.text;
                 a.href = 'javascript:void(0);';
                 a.style = {"margin-right": "10px"};
-                elem.appendChild(a);
+                container.appendChild(a);
                 a.addEventListener('click', obj.action);
             });
+            const group = elem.querySelector('span.collaborationGroupMru');
+            const groupid = group && group.parentElement.getAttribute("data-hovid") || null;
+            if(groupid){
+                const a = document.createElement('a');
+                a.setAttribute("class", "ignore-group");
+                a.textContent = "このグループを非表示にする";
+                a.href = 'javascript:void(0);';
+                a.style = {"margin-right": "10px" };
+                container.appendChild(a);
+                a.addEventListener('click', () => {alert("未実装です。需要ありそうなら実装します。")});
+
+            }
         });
     };
     
@@ -82,26 +96,20 @@ const setReadItemVisibility = (doc, isVisible, read) => {
     }    
 };
 
-const setRepostVisibility = (doc, isVisible) => {
-    const getReposts = (doc) => {
-        const feedItems = doc.querySelectorAll('div.cxfeeditem.feeditem');
-        const reposts = Array.from(feedItems)
-            .filter(item => !item.closest('.rechatMainContainer'))
-            .map(div => {
-                const doesContainRepost = Array.from(div.querySelectorAll('a')).some(anchor => anchor.innerText === '元の投稿');
-                const doesContainComments = div.querySelector('div.feeditemcomment.cxfeedcomment') !== null;
-                return (doesContainRepost && !doesContainComments) ? div : null;
+const setRepostVisibility = (doc) => {
+    const feedItems = doc.querySelectorAll('div.feeditembody');
+    feedItems.forEach(div => {
+        const doesContainRepost = div.querySelectorAll('a.feeditemsecondentity').length === 2;
+        if(doesContainRepost){
+            div.classList.add("rechat");
+            const attachments = div.querySelectorAll('.feeditemattachments');
+            div.querySelectorAll('a').forEach( (a) => {
+                if(a.innerText === 'さらに表示'){
+                    a.addEventListener('click', () => {attachments.forEach((attachment) => {attachment.style.display = 'initial'});});
+                }
             })
-            .filter(div => div !== null);
-        return reposts;
-
-    };
-    const reposts = getReposts(doc);
-    if(isVisible){
-        showElements(reposts);
-    } else {
-        hideElements(reposts);
-    }
+        }
+    });
 };
 function getStorageItem(key) {
     return new Promise((resolve, reject) => {
@@ -116,19 +124,18 @@ function getStorageItem(key) {
 }
 Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values => {
     [g_isVisible, g_read] = values;
-    setRepostVisibility(document, g_isVisible);
+    setRepostVisibility(document);
     setReadItemVisibility(document, g_isVisible, g_read);
 }).catch(error => {
     console.error("An error occurred:", error);
 });
-//span.collaborationGroupMru
 
 const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         for(let node of mutation.addedNodes){
             if(node.nodeName === 'DIV'){
                 let doc = node.parentElement;
-                setRepostVisibility(doc, g_isVisible);
+                setRepostVisibility(doc);
                 setReadItemVisibility(doc, g_isVisible, g_read);
             }
         }
@@ -140,7 +147,7 @@ observer.observe(document.body, { childList: true, subtree: true });
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.hasOwnProperty('isVisible')) {
         g_isVisible = request.isVisible;
-        setRepostVisibility(document, g_isVisible);
+        setRepostVisibility(document);
         setReadItemVisibility(document, g_isVisible, g_read);
     }
 });

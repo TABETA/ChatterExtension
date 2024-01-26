@@ -4,3 +4,37 @@ div[data-chatterextension-read] a.set-read {
 div[data-chatterextension-unread] a.set-unread {
     display: none;
 }
+div.chatterextension-container {
+    display: flex;
+    flex-wrap:wrap;
+    gap: 10px;
+}
+.threecolumn, .userProfilePage {
+    width: auto !important;
+}
+.threecolumn .mainContent {
+    width: auto !important;
+}
+.threecolumn .mainContent .lowerMainContent {
+    width: auto !important;
+}
+.threecolumn .centerContent, .userProfilePage .centerContent {
+    width: 80% !important;
+}
+.publishercontainer {
+    width: auto !important;
+    max-width: initial !important;
+    resize: both;
+}
+.feedcontainer {
+    max-width: initial !important;
+}
+.feedcontainer .rechat .feeditemtextadditional {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;     
+}
+.feedcontainer .rechat .feeditemattachments {
+    display: none;
+}
