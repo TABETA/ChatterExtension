@@ -85,7 +85,7 @@ const setReadItemVisibility = (doc, isVisible, read) => {
     const getReadItems = (doc, read) => {
         const readIDs = read && Object.keys(read) || [];
         const query = readIDs.map(v => `[id="${v}"]`).join(',');
-        return query !== '' ? doc.querySelectorAll(query) : document.createDocumentFragment().childNodes;
+        return query && doc.querySelectorAll(query) || document.createDocumentFragment().childNodes;
     }
     const readItems = getReadItems(doc, read);
 
