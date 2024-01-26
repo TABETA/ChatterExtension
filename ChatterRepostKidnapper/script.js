@@ -85,7 +85,7 @@ const setReadItemVisibility = (doc, isVisible, read) => {
     const getReadItems = (doc, read) => {
         const readIDs = read && Object.keys(read) || [];
         const query = readIDs.map(v => `[id="${v}"]`).join(',');
-        return doc.querySelectorAll(query);
+        return query !== '' ? doc.querySelectorAll(query) : document.createDocumentFragment().childNodes;
     }
     const readItems = getReadItems(doc, read);
 
@@ -124,6 +124,8 @@ function getStorageItem(key) {
 }
 Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values => {
     [g_isVisible, g_read] = values;
+    g_isVisible = g_isVisible || true;
+    g_read = g_read || {};
     setRepostVisibility(document);
     setReadItemVisibility(document, g_isVisible, g_read);
 }).catch(error => {
