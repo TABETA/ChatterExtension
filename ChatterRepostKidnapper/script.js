@@ -124,7 +124,6 @@ function getStorageItem(key) {
 }
 Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values => {
     [g_isVisible, g_read] = values;
-    g_isVisible = g_isVisible || true;
     g_read = g_read || {};
     setRepostVisibility(document);
     setReadItemVisibility(document, g_isVisible, g_read);
