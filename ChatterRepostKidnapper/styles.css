@@ -38,3 +38,6 @@ div.chatterextension-container {
 .feedcontainer .rechat .feeditemattachments {
     display: none;
 }
+a.ignore-group{
+    display: none;
+}
