@@ -34,7 +34,7 @@ https://*.salesforce.com/*/chatter/*
 
 ![Alt text](imgs/image-2.png)
 
-`hide`ボタンを押すとRepostを非表示にします。
+`hide`ボタンを押すと既読アイテムを非表示にします。
 
 ![Alt text](imgs/image-4.png)
 
