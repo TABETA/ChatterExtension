@@ -10,8 +10,3 @@ if(r && l && m){
     leftMenu.appendChild(r);
     p.insertBefore(leftMenu, m);
 }
-// const fdd = document.querySelector(".feedDropDown");
-// const pc = document.querySelector(".publishercontainer");
-// if(fdd && pc){
-//     pc.parentNode.insertBefore(fdd, pc.nextSibling);
-// }

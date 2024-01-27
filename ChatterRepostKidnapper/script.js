@@ -192,13 +192,9 @@ const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         for(let node of mutation.addedNodes){
             if(node.nodeName === 'DIV' && node.parentElement){
-                if("feedDropDown" in node.classList){
-                    // node.remove();
-                }else{
-                    let doc = node.parentElement;
-                    setRepostVisibility(doc);
-                    setReadItemVisibility(doc, g_isVisible, g_read, g_hideGroupDict);
-                }
+                let doc = node.parentElement;
+                setRepostVisibility(doc);
+                setReadItemVisibility(doc, g_isVisible, g_read, g_hideGroupDict);
             }
         }
     });
