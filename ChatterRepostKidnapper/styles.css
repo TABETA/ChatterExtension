@@ -15,25 +15,87 @@ div.chatterextension-container {
     flex-wrap:wrap;
     gap: 10px;
 }
+.threecolumn{
+    display: grid;
+    grid-template-columns: 200px 1fr; /* 左側のカラムの幅と右側のカラムの幅 */
+    grid-template-rows: auto; /* 行の高さを自動調整 */
+    gap: 10px; /* グリッド間のギャップ */
+}
 .threecolumn, .userProfilePage {
     width: auto !important;
 }
+.threecolumn .headerContent {
+    grid-column: 1 / -1;
+    grid-row: 1;
+}
+.threecolumn .leftMenu {
+    grid-column: 1;
+    grid-row: 2;
+}
+.threecolumn .leftContent,.userProfilePage .leftContent {
+    float: initial !important;
+}
+.threecolumn .rightContent,.userProfilePage .rightContent{
+    float: initial !important;
+}
 .threecolumn .mainContent {
     width: auto !important;
+    margin-left: initial !important;
+    grid-column: 2;
+    grid-row: 2 / -1;
 }
 .threecolumn .mainContent .lowerMainContent {
     width: auto !important;
 }
 .threecolumn .centerContent, .userProfilePage .centerContent {
-    width: 80% !important;
+    width: 90% !important;
 }
 .publishercontainer {
     width: auto !important;
     max-width: initial !important;
     resize: both;
 }
+.feedDropDown {
+    width: auto !important;
+    max-width: initial !important;
+    grid-column: 1 / -1;
+}
+/* 
+.feedSearch{
+    position: initial !important;
+    display: inline;
+}
+.feedSearch.feedSearchOpen .feedSearchForm {
+    display: inline;
+}
+.zen .comboMenu.feedsupermenu .zen-smlineSep {
+    position: initial !important;
+    display: inline;
+}
+.zen .comboMenu .zen-smlineSep {
+    float: initial !important;
+}
+.zen .comboMenu .zen-select {
+    float: initial !important;
+}
+.feedsupermenu .feedSearchClearIcon {
+    position: relative !important;
+} 
+.zen .zen-searchBox input {
+    width: 100% !important;
+    box-sizing:border-box ;
+} */
+.clearingBox {
+    display: none;
+}
 .feedcontainer {
     max-width: initial !important;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(560px, 1fr));
+    gap: 10px;
+}
+.feedcontainer .feeditem{
+    max-width: 560px !important;
 }
 .feedcontainer .rechat .feeditemtextadditional {
     display: -webkit-box;

@@ -16,6 +16,11 @@
             "matches": ["https://*.salesforce.com/*/chatter/*"],
             "js": ["script.js"],
             "css":["styles.css"]
+        },
+        {
+          "matches": ["https://*.salesforce.com/*/chatter/*"],
+          "js": ["onload.js"],
+          "run_at": "document_end"
         }
     ],
     "action": {
