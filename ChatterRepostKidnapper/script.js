@@ -134,7 +134,7 @@ Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values =
 const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         for(let node of mutation.addedNodes){
-            if(node.nodeName === 'DIV'){
+            if(node.nodeName === 'DIV' && node.parentElement){
                 let doc = node.parentElement;
                 setRepostVisibility(doc);
                 setReadItemVisibility(doc, g_isVisible, g_read);
