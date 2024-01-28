@@ -4,6 +4,12 @@ div[data-chatterextension-read] a.set-read {
 div[data-chatterextension-unread] a.set-unread {
     display: none;
 }
+div[data-chatterextension-hiddenGroup] a.hide-group {
+    display: none;
+}
+div[data-chatterextension-shownGroup] a.show-group {
+    display: none;
+}
 div.chatterextension-container {
     display: flex;
     flex-wrap:wrap;
@@ -36,8 +42,5 @@ div.chatterextension-container {
     overflow: hidden;     
 }
 .feedcontainer .rechat .feeditemattachments {
-    display: none;
-}
-a.ignore-group{
     display: none;
 }
