@@ -1,5 +1,6 @@
 let g_isVisible = false;
 let g_read = false;
+let g_hideGroupDict = false;
 
 const hideElement = (elem) => {if(elem) { elem.style.display = 'none'; }};
 const hideElements = (elems) => {
@@ -9,8 +10,11 @@ const showElement = (elem) => {if(elem) { elem.style.display = ''; }};
 const showElements = (elems) => {
     elems.forEach(elem => { showElement(elem); });
 };
-const setReadItemVisibility = (doc, isVisible, read) => {
-    const addExtButton = (doc, read) =>{
+const getQueryGroupFeedByID = (id) =>{
+    return `div[data-feeditem*="\\"parentid\\":\\"${id}\\""]`;
+}
+const setReadItemVisibility = (doc, isVisible, read, hideGroupDict) => {
+    const addExtButton = (doc, read, hideGroupDict) =>{
         const attrProcessed = 'data-chatterextension-processed';
         const attrRead = 'data-chatterextension-read';
         const attrUnread = 'data-chatterextension-unread';
@@ -66,28 +70,80 @@ const setReadItemVisibility = (doc, isVisible, read) => {
                 container.appendChild(a);
                 a.addEventListener('click', obj.action);
             });
-            const group = elem.querySelector('span.collaborationGroupMru');
-            const groupid = group && group.parentElement.getAttribute("data-hovid") || null;
-            if(groupid){
-                const a = document.createElement('a');
-                a.setAttribute("class", "ignore-group");
-                a.textContent = "このグループを非表示にする";
-                a.href = 'javascript:void(0);';
-                a.style = {"margin-right": "10px" };
-                container.appendChild(a);
-                a.addEventListener('click', () => {alert("未実装です。需要ありそうなら実装します。")});
-
+            const attrDataFeedItem = elem.getAttribute("data-feeditem");
+            if(attrDataFeedItem){
+                const dataFeedItem = JSON.parse(attrDataFeedItem);
+                switch(dataFeedItem.parentname){
+                    case "グループ":
+                        const id = dataFeedItem.parentid;
+                        if(id){
+                            const attrHiddenGroup = 'data-chatterextension-hiddenGroup';
+                            const attrShownGroup = 'data-chatterextension-shownGroup';
+                            if(id in hideGroupDict){
+                                elem.setAttribute(attrHiddenGroup, '');
+                                elem.removeAttribute(attrShownGroup);
+                            } else {
+                                elem.setAttribute(attrShownGroup, '');
+                                elem.removeAttribute(attrHiddenGroup);
+                            }
+                            [{
+                                class: 'hide-group',
+                                text: 'このグループを非表示',
+                                action : (e) => {
+                                    e.stopPropagation();
+                                    if(id in hideGroupDict){
+                                        return;
+                                    }
+                                    hideGroupDict[id] = true;
+                                    chrome.storage.local.set({hideGroupDict:hideGroupDict});
+                                    elem.setAttribute(attrHiddenGroup, '');
+                                    elem.removeAttribute(attrShownGroup);
+                                    if(!isVisible){
+                                        hideElements(document.querySelectorAll(getQueryGroupFeedByID(id)));
+                                    }
+                                }
+                            },
+                            {
+                                class: 'show-group',
+                                text: 'このグループを再表示',
+                                action : (e) => {
+                                    e.stopPropagation();
+                                    if(!(id in hideGroupDict)){
+                                        return;
+                                    }
+                                    delete hideGroupDict[id];
+                                    chrome.storage.local.set({hideGroupDict:hideGroupDict});
+                                    elem.setAttribute(attrShownGroup, '');
+                                    elem.removeAttribute(attrHiddenGroup);
+                                }
+                            }].forEach((obj)=>{
+                                let a = document.createElement('a');
+                                a.setAttribute("class", obj.class);
+                                a.textContent = obj.text;
+                                a.href = 'javascript:void(0);';
+                                a.style = {"margin-right": "10px"};
+                                container.appendChild(a);
+                                a.addEventListener('click', obj.action);
+                            });
+                        }
+                        break;
+                    case "ユーザー":
+                        break;
+                }
             }
         });
     };
     
-    addExtButton(doc, read);
-    const getReadItems = (doc, read) => {
+    addExtButton(doc, read, hideGroupDict);
+    const getReadItems = (doc, read, hideGroupDict) => {
         const readIDs = read && Object.keys(read) || [];
-        const query = readIDs.map(v => `[id="${v}"]`).join(',');
-        return query && doc.querySelectorAll(query) || document.createDocumentFragment().childNodes;
+        const readItems = readIDs.length > 0 && doc.querySelectorAll(readIDs.map(v => `[id="${v}"]`).join(',')) || document.createDocumentFragment().childNodes;
+        const groupIDs = hideGroupDict && Object.keys(hideGroupDict) || [];
+        const hidedItems = groupIDs.length > 0 && doc.querySelectorAll(groupIDs.map(id => getQueryGroupFeedByID(id)).join(',')) || document.createDocumentFragment().childNodes;
+        return [...readItems, ...hidedItems];
+
     }
-    const readItems = getReadItems(doc, read);
+    const readItems = getReadItems(doc, read, hideGroupDict);
 
     if(isVisible){
         showElements(readItems);
@@ -122,11 +178,12 @@ function getStorageItem(key) {
         });
     });
 }
-Promise.all([getStorageItem("isVisible"), getStorageItem("read")]).then(values => {
-    [g_isVisible, g_read] = values;
+Promise.all([getStorageItem("isVisible"), getStorageItem("read"), getStorageItem("hideGroupDict")]).then(values => {
+    [g_isVisible, g_read, g_hideGroupDict] = values;
     g_read = g_read || {};
+    g_hideGroupDict = g_hideGroupDict || {};
     setRepostVisibility(document);
-    setReadItemVisibility(document, g_isVisible, g_read);
+    setReadItemVisibility(document, g_isVisible, g_read, g_hideGroupDict);
 }).catch(error => {
     console.error("An error occurred:", error);
 });
@@ -137,7 +194,7 @@ const observer = new MutationObserver(mutations => {
             if(node.nodeName === 'DIV' && node.parentElement){
                 let doc = node.parentElement;
                 setRepostVisibility(doc);
-                setReadItemVisibility(doc, g_isVisible, g_read);
+                setReadItemVisibility(doc, g_isVisible, g_read, g_hideGroupDict);
             }
         }
     });
@@ -149,6 +206,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.hasOwnProperty('isVisible')) {
         g_isVisible = request.isVisible;
         setRepostVisibility(document);
-        setReadItemVisibility(document, g_isVisible, g_read);
+        setReadItemVisibility(document, g_isVisible, g_read, g_hideGroupDict);
     }
 });
