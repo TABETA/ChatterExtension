@@ -1,6 +1,6 @@
 let g_isVisible = false;
-let g_read = false;
-let g_hideEntityDict = false;
+let g_read = {};
+let g_hideEntityDict = {};
 
 const hideElement = (elem) => {if(elem) { elem.style.display = 'none'; }};
 const hideElements = (elems) => {
@@ -198,13 +198,65 @@ Promise.all([
     console.error("An error occurred:", error);
 });
 
+
+const hideSelf = function () {
+    this.style.display = 'none';
+    this.onmouseout = null;
+    this.onclick = null;
+}
+const addPreviewContainer = ()=>{
+    let originalImageContainer = document.createElement('div');
+    originalImageContainer.id = 'originalImageContainer';
+    
+    originalImageContainer.style.display = 'none';
+    originalImageContainer.style.position = 'fixed';
+    originalImageContainer.style.top = '50%';
+    originalImageContainer.style.left = '50%';
+    originalImageContainer.style.transform = 'translate(-50%, -50%)';
+    originalImageContainer.style.zIndex = '1000';
+    originalImageContainer.style.width = '90vw'; // ビューポートの幅の90%
+    originalImageContainer.style.height = '90vh'; // ビューポートの高さの90%
+    originalImageContainer.style.overflow = 'auto'; // 画像がコンテナより大きい場合はスクロールバーを表示
+
+    let originalImage = document.createElement('img');
+    originalImage.id = 'originalImage';
+    originalImage.style.maxWidth = '100%';
+    originalImage.style.maxHeight = '100%';
+    originalImageContainer.appendChild(originalImage);
+    document.body.appendChild(originalImageContainer);
+    return [originalImageContainer, originalImage]
+}
+let [originalImageContainer, originalImage] = addPreviewContainer();
+
+const addOriginalImageViewAction = (contentPost)=>{
+    let downloadAction = contentPost.querySelector("td.moreFileActions-td span.contentActionLabel");
+    let ext = downloadAction.textContent.trim().split(" ")[0];
+    let thumbnail = contentPost.querySelector(".thumbnailCell img");
+    let orgsrc = thumbnail.src.replace(/rendition=[^&]*/, `rendition=ORIGINAL_${ext}`).replace(/&page=[^&]*/, '');
+    thumbnail.parentNode.onclick = (event) => {
+        event.preventDefault();
+        originalImage.onload = function(){
+            originalImageContainer.onmouseout = hideSelf;
+            originalImageContainer.onclick = hideSelf;
+        }
+        originalImage.src = orgsrc;
+        originalImageContainer.style.display = 'block';
+    };
+}
+
+document.querySelectorAll(".contentPost").forEach(contentPost => addOriginalImageViewAction(contentPost));
+
+
 const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
         for(let node of mutation.addedNodes){
-            if(node.nodeName === 'DIV' && node.parentElement){
-                let doc = node.parentElement;
-                setRepostVisibility(doc);
-                setReadItemVisibility(doc, g_isVisible, g_read, g_hideEntityDict);
+            if(node.nodeType === Node.ELEMENT_NODE){
+                if(node.nodeName === 'DIV' && node.parentElement){
+                    let doc = node.parentElement;
+                    setRepostVisibility(doc);
+                    setReadItemVisibility(doc, g_isVisible, g_read, g_hideEntityDict);
+                }
+                node.querySelectorAll(".contentPost").forEach(contentPost => addOriginalImageViewAction(contentPost));
             }
         }
     });
