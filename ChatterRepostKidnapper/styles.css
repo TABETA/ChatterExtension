@@ -4,10 +4,16 @@ div[data-chatterextension-read] a.set-read {
 div[data-chatterextension-unread] a.set-unread {
     display: none;
 }
-div[data-chatterextension-hiddenGroup] a.hide-group {
+div[data-chatterextension-hiddengroup] a.hide-group {
     display: none;
 }
-div[data-chatterextension-shownGroup] a.show-group {
+div[data-chatterextension-showngroup] a.show-group {
+    display: none;
+}
+div[data-chatterextension-hiddenuser] a.hide-user {
+    display: none;
+}
+div[data-chatterextension-shownuser] a.show-user {
     display: none;
 }
 div.chatterextension-container {

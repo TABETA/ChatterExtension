@@ -1,6 +1,6 @@
 let g_isVisible = false;
 let g_read = false;
-let g_hideGroupDict = false;
+let g_hideEntityDict = false;
 
 const hideElement = (elem) => {if(elem) { elem.style.display = 'none'; }};
 const hideElements = (elems) => {
@@ -10,11 +10,11 @@ const showElement = (elem) => {if(elem) { elem.style.display = ''; }};
 const showElements = (elems) => {
     elems.forEach(elem => { showElement(elem); });
 };
-const getQueryGroupFeedByID = (id) =>{
+const getQueryFeedByParentID = (id) =>{
     return `div[data-feeditem*="\\"parentid\\":\\"${id}\\""]`;
 }
-const setReadItemVisibility = (doc, isVisible, read, hideGroupDict) => {
-    const addExtButton = (doc, read, hideGroupDict) =>{
+const setReadItemVisibility = (doc, isVisible, read, hideEntityDict) => {
+    const addExtButton = (doc, read, hideEntityDict) =>{
         const attrProcessed = 'data-chatterextension-processed';
         const attrRead = 'data-chatterextension-read';
         const attrUnread = 'data-chatterextension-unread';
@@ -73,77 +73,83 @@ const setReadItemVisibility = (doc, isVisible, read, hideGroupDict) => {
             const attrDataFeedItem = elem.getAttribute("data-feeditem");
             if(attrDataFeedItem){
                 const dataFeedItem = JSON.parse(attrDataFeedItem);
+                const addButtonForEntity = (name) => {
+                    const id = dataFeedItem.parentid;
+                    if(id){
+                        const attrHidden = `data-chatterextension-hidden${name}`;
+                        const attrShown = `data-chatterextension-shown${name}`;
+                        if(id in hideEntityDict){
+                            elem.setAttribute(attrHidden, '');
+                            elem.removeAttribute(attrShown);
+                        } else {
+                            elem.setAttribute(attrShown, '');
+                            elem.removeAttribute(attrHidden);
+                        }
+                        [{
+                            class: `hide-${name}`,
+                            text: `この${name}を非表示`,
+                            action : (e) => {
+                                e.stopPropagation();
+                                if(id in hideEntityDict){
+                                    return;
+                                }
+                                hideEntityDict[id] = true;
+                                chrome.storage.local.set({hideGroupDict:hideEntityDict});
+                                elem.setAttribute(attrHidden, '');
+                                elem.removeAttribute(attrShown);
+                                if(!isVisible){
+                                    hideElements(document.querySelectorAll(getQueryFeedByParentID(id)));
+                                }
+                            }
+                        },
+                        {
+                            class: `show-${name}`,
+                            text: `この${name}を再表示`,
+                            action : (e) => {
+                                e.stopPropagation();
+                                if(!(id in hideEntityDict)){
+                                    return;
+                                }
+                                delete hideEntityDict[id];
+                                chrome.storage.local.set({hideGroupDict:hideEntityDict});
+                                elem.setAttribute(attrShown, '');
+                                elem.removeAttribute(attrHidden);
+                            }
+                        }].forEach((obj)=>{
+                            let a = document.createElement('a');
+                            a.setAttribute("class", obj.class);
+                            a.textContent = obj.text;
+                            a.href = 'javascript:void(0);';
+                            a.style = {"margin-right": "10px"};
+                            container.appendChild(a);
+                            a.addEventListener('click', obj.action);
+                        });
+                    }
+                }
                 switch(dataFeedItem.parentname){
                     case "グループ":
-                        const id = dataFeedItem.parentid;
-                        if(id){
-                            const attrHiddenGroup = 'data-chatterextension-hiddenGroup';
-                            const attrShownGroup = 'data-chatterextension-shownGroup';
-                            if(id in hideGroupDict){
-                                elem.setAttribute(attrHiddenGroup, '');
-                                elem.removeAttribute(attrShownGroup);
-                            } else {
-                                elem.setAttribute(attrShownGroup, '');
-                                elem.removeAttribute(attrHiddenGroup);
-                            }
-                            [{
-                                class: 'hide-group',
-                                text: 'このグループを非表示',
-                                action : (e) => {
-                                    e.stopPropagation();
-                                    if(id in hideGroupDict){
-                                        return;
-                                    }
-                                    hideGroupDict[id] = true;
-                                    chrome.storage.local.set({hideGroupDict:hideGroupDict});
-                                    elem.setAttribute(attrHiddenGroup, '');
-                                    elem.removeAttribute(attrShownGroup);
-                                    if(!isVisible){
-                                        hideElements(document.querySelectorAll(getQueryGroupFeedByID(id)));
-                                    }
-                                }
-                            },
-                            {
-                                class: 'show-group',
-                                text: 'このグループを再表示',
-                                action : (e) => {
-                                    e.stopPropagation();
-                                    if(!(id in hideGroupDict)){
-                                        return;
-                                    }
-                                    delete hideGroupDict[id];
-                                    chrome.storage.local.set({hideGroupDict:hideGroupDict});
-                                    elem.setAttribute(attrShownGroup, '');
-                                    elem.removeAttribute(attrHiddenGroup);
-                                }
-                            }].forEach((obj)=>{
-                                let a = document.createElement('a');
-                                a.setAttribute("class", obj.class);
-                                a.textContent = obj.text;
-                                a.href = 'javascript:void(0);';
-                                a.style = {"margin-right": "10px"};
-                                container.appendChild(a);
-                                a.addEventListener('click', obj.action);
-                            });
-                        }
+                        addButtonForEntity("group");
                         break;
                     case "ユーザー":
+                        addButtonForEntity("user");
                         break;
                 }
             }
         });
     };
     
-    addExtButton(doc, read, hideGroupDict);
-    const getReadItems = (doc, read, hideGroupDict) => {
+    addExtButton(doc, read, hideEntityDict);
+    const getReadItems = (doc, read, hideEntityDict) => {
         const readIDs = read && Object.keys(read) || [];
         const readItems = readIDs.length > 0 && doc.querySelectorAll(readIDs.map(v => `[id="${v}"]`).join(',')) || document.createDocumentFragment().childNodes;
-        const groupIDs = hideGroupDict && Object.keys(hideGroupDict) || [];
-        const hidedItems = groupIDs.length > 0 && doc.querySelectorAll(groupIDs.map(id => getQueryGroupFeedByID(id)).join(',')) || document.createDocumentFragment().childNodes;
+        const entityIDs = hideEntityDict && Object.keys(hideEntityDict) || [];
+        //TODO: この処理では、グループに投稿した無視ユーザーの投稿は見えてしまう。
+        // Array.from(document.querySelectorAll('span.feeditemsecondentity a[data-hovid]')).map(a => a.attributes["data-hovid"].value)から判断しないといけない
+        const hidedItems = entityIDs.length > 0 && doc.querySelectorAll(entityIDs.map(id => getQueryFeedByParentID(id)).join(',')) || document.createDocumentFragment().childNodes;
         return [...readItems, ...hidedItems];
 
     }
-    const readItems = getReadItems(doc, read, hideGroupDict);
+    const readItems = getReadItems(doc, read, hideEntityDict);
 
     if(isVisible){
         showElements(readItems);
@@ -178,12 +184,16 @@ function getStorageItem(key) {
         });
     });
 }
-Promise.all([getStorageItem("isVisible"), getStorageItem("read"), getStorageItem("hideGroupDict")]).then(values => {
-    [g_isVisible, g_read, g_hideGroupDict] = values;
+Promise.all([
+    getStorageItem("isVisible"),
+    getStorageItem("read"),
+    getStorageItem("hideGroupDict")//Groupじゃなくなったけど後方互換のために名称変更しない
+]).then(values => {
+    [g_isVisible, g_read, g_hideEntityDict] = values;
     g_read = g_read || {};
-    g_hideGroupDict = g_hideGroupDict || {};
+    g_hideEntityDict = g_hideEntityDict || {};
     setRepostVisibility(document);
-    setReadItemVisibility(document, g_isVisible, g_read, g_hideGroupDict);
+    setReadItemVisibility(document, g_isVisible, g_read, g_hideEntityDict);
 }).catch(error => {
     console.error("An error occurred:", error);
 });
@@ -194,7 +204,7 @@ const observer = new MutationObserver(mutations => {
             if(node.nodeName === 'DIV' && node.parentElement){
                 let doc = node.parentElement;
                 setRepostVisibility(doc);
-                setReadItemVisibility(doc, g_isVisible, g_read, g_hideGroupDict);
+                setReadItemVisibility(doc, g_isVisible, g_read, g_hideEntityDict);
             }
         }
     });
@@ -206,6 +216,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.hasOwnProperty('isVisible')) {
         g_isVisible = request.isVisible;
         setRepostVisibility(document);
-        setReadItemVisibility(document, g_isVisible, g_read, g_hideGroupDict);
+        setReadItemVisibility(document, g_isVisible, g_read, g_hideEntityDict);
     }
 });
