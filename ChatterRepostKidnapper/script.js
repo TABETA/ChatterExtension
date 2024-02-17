@@ -199,8 +199,8 @@ Promise.all([
 });
 
 
-const hideSelf = function () {
-    this.style.display = 'none';
+const hideParent = function () {
+    this.parentNode.style.display = 'none';
     this.onmouseout = null;
     this.onclick = null;
 }
@@ -210,18 +210,20 @@ const addPreviewContainer = ()=>{
     
     originalImageContainer.style.display = 'none';
     originalImageContainer.style.position = 'fixed';
-    originalImageContainer.style.top = '50%';
-    originalImageContainer.style.left = '50%';
-    originalImageContainer.style.transform = 'translate(-50%, -50%)';
+    originalImageContainer.style.top = '0';
+    originalImageContainer.style.left = '0';
     originalImageContainer.style.zIndex = '1000';
-    originalImageContainer.style.width = '90vw'; // ビューポートの幅の90%
-    originalImageContainer.style.height = '90vh'; // ビューポートの高さの90%
-    originalImageContainer.style.overflow = 'auto'; // 画像がコンテナより大きい場合はスクロールバーを表示
+    originalImageContainer.style.width = '100vw';
+    originalImageContainer.style.height = '100vh';
+    originalImageContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    originalImageContainer.style.justifyContent = 'center';
+    originalImageContainer.style.alignItems = 'center';
 
     let originalImage = document.createElement('img');
     originalImage.id = 'originalImage';
-    originalImage.style.maxWidth = '100%';
-    originalImage.style.maxHeight = '100%';
+    originalImage.style.maxWidth = '90%';
+    originalImage.style.maxHeight = '90%';
+    originalImage.style.objectFit = 'contain';
     originalImageContainer.appendChild(originalImage);
     document.body.appendChild(originalImageContainer);
     return [originalImageContainer, originalImage]
@@ -231,16 +233,25 @@ let [originalImageContainer, originalImage] = addPreviewContainer();
 const addOriginalImageViewAction = (contentPost)=>{
     let downloadAction = contentPost.querySelector("td.moreFileActions-td span.contentActionLabel");
     let ext = downloadAction.textContent.trim().split(" ")[0];
+    switch (ext) {
+        case "jpg":
+        case "gif":
+        case "bmp":
+        case "png":    
+            break;
+        default:
+            return;
+    }
     let thumbnail = contentPost.querySelector(".thumbnailCell img");
     let orgsrc = thumbnail.src.replace(/rendition=[^&]*/, `rendition=ORIGINAL_${ext}`).replace(/&page=[^&]*/, '');
     thumbnail.parentNode.onclick = (event) => {
         event.preventDefault();
         originalImage.onload = function(){
-            originalImageContainer.onmouseout = hideSelf;
-            originalImageContainer.onclick = hideSelf;
+            originalImage.onmouseout = hideParent;
+            originalImage.onclick = hideParent;
         }
         originalImage.src = orgsrc;
-        originalImageContainer.style.display = 'block';
+        originalImageContainer.style.display = 'flex';
     };
 }
 
