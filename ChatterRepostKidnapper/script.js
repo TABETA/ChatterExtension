@@ -157,13 +157,22 @@ const setReadItemVisibility = (doc, isVisible, read, hideEntityDict) => {
         hideElements(readItems);
     }    
 };
-
+const forceCollapse = (rechat) => {
+    let cxfeeditemtextwrappers = rechat.querySelectorAll('.cxfeeditemtextwrapper:has(.cxfeeditemtextadditional:not(.feeditemtextadditional))');
+    cxfeeditemtextwrappers?.forEach(d => {
+        d.querySelector('.cxfeeditemtextadditional:not(.feeditemtextadditional)').classList.add('feeditemtextadditional');
+        d.querySelector('div.fadeout.hidden')?.classList.remove('hidden');
+        d.querySelector('span.cxmorelink.hidden')?.classList.remove('hidden');
+        d.querySelector('hr.sectionBreak.hidden')?.classList.remove('hidden');
+    });
+};
 const setRepostVisibility = (doc) => {
     const feedItems = doc.querySelectorAll('div.feeditembody');
     feedItems.forEach(div => {
         const doesContainRepost = div.querySelectorAll('a.feeditemsecondentity').length === 2;
         if(doesContainRepost){
             div.classList.add("rechat");
+            forceCollapse(div);
             const attachments = div.querySelectorAll('.feeditemattachments');
             div.querySelectorAll('a').forEach( (a) => {
                 if(a.innerText === 'さらに表示'){
