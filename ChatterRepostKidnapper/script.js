@@ -137,7 +137,7 @@ const setReadItemVisibility = (doc, isVisible, read, hideEntityDict) => {
             }
         });
     };
-    
+
     addExtButton(doc, read, hideEntityDict);
     const getReadItems = (doc, read, hideEntityDict) => {
         const readIDs = read && Object.keys(read) || [];
@@ -155,7 +155,30 @@ const setReadItemVisibility = (doc, isVisible, read, hideEntityDict) => {
         showElements(readItems);
     } else {
         hideElements(readItems);
-    }    
+    }
+};
+const forceWrapCxfeed = (rechat) =>{
+    let span = rechat.querySelector('span.feeditemtext.cxfeeditemtext');
+    if(span){
+        let parent = span.parentElement;
+        if(parent.nodeName === 'DIV' && !parent.classList.contains('cxfeeditemtextadditional')){
+            let container = document.createElement('div');
+            container.classList.add('cxfeeditemtextadditional');
+            container.classList.add('feeditemtextadditional');
+            container.insertBefore(span, null);
+            parent.appendChild(container);
+            let html = `
+                <div class="fadeout"></div>
+                <div class="cxmorecontainer">
+                    <span class="cxmorelink">
+                        <a href="javascript: void(0);" onclick="chatter.getFeed().toggleFeed(this, true);">さらに表示</a>
+                        <hr class="sectionBreak">
+                    </span>
+                </div>
+            `;
+            parent.insertAdjacentHTML('beforeend', html);
+        }
+    }
 };
 const forceCollapse = (rechat) => {
     let cxfeeditemtextwrappers = rechat.querySelectorAll('.cxfeeditemtextwrapper:has(.cxfeeditemtextadditional:not(.feeditemtextadditional))');
@@ -172,6 +195,7 @@ const setRepostVisibility = (doc) => {
         const doesContainRepost = div.querySelectorAll('a.feeditemsecondentity').length === 2;
         if(doesContainRepost){
             div.classList.add("rechat");
+            forceWrapCxfeed(div);
             forceCollapse(div);
             const attachments = div.querySelectorAll('.feeditemattachments');
             div.querySelectorAll('a').forEach( (a) => {
@@ -216,7 +240,7 @@ const hideParent = function () {
 const addPreviewContainer = ()=>{
     let originalImageContainer = document.createElement('div');
     originalImageContainer.id = 'originalImageContainer';
-    
+
     originalImageContainer.style.display = 'none';
     originalImageContainer.style.position = 'fixed';
     originalImageContainer.style.top = '0';
@@ -246,7 +270,7 @@ const addOriginalImageViewAction = (contentPost)=>{
         case "jpg":
         case "gif":
         case "bmp":
-        case "png":    
+        case "png":
             break;
         default:
             return;
